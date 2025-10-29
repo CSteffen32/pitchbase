@@ -1,9 +1,13 @@
-import { User, Pitch, Tag, PitchStatus, Role } from '@prisma/client'
+import { User, Pitch, Tag } from '@prisma/client'
 
-export type { User, Pitch, Tag, PitchStatus, Role }
+export type { User, Pitch, Tag }
 
-export interface PitchWithTags extends Pitch {
-  authorName?: string | null
+// Define types that Prisma doesn't generate (these are strings in schema, not enums)
+export type PitchStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+export type Role = 'ADMIN' | 'AUTHOR' | 'READER'
+
+export interface PitchWithTags extends Omit<Pitch, 'authorName'> {
+  authorName: string | null
   tags: Array<{
     tag: Tag
   }>
