@@ -17,7 +17,14 @@ export const authOptions: NextAuthOptions = {
         // Simple password check for author access
         const authorPassword = process.env.AUTHOR_PASSWORD || 'pitchbase2024'
 
-        if (credentials.password === authorPassword) {
+        // Check password first
+        if (credentials.password !== authorPassword) {
+          console.log('Authentication failed: Incorrect password')
+          return null
+        }
+
+        // Password is correct, now try to access database
+        try {
           // Find or create the author user in the database
           let user = await prisma.user.findUnique({
             where: { email: 'author@pitchbase.com' },
@@ -46,9 +53,18 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             role: user.role,
           }
-        }
+        } catch (error) {
+          // Database access failed - log error for debugging
+          console.error('Authentication database error:', error)
+          console.error('Error details:', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+          })
 
-        return null
+          // Return null to fail authentication
+          // This will show as "incorrect password" but the real issue is database access
+          return null
+        }
       },
     }),
   ],
