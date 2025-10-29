@@ -1,25 +1,43 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic' // Make this dynamic to avoid build-time DB access
+
 export async function GET() {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
-  // Get published pitches
-  const pitches = await prisma.pitch.findMany({
-    where: { status: 'PUBLISHED' },
-    orderBy: { publishedAt: 'desc' },
-    take: 20,
-    include: {
-      author: {
-        select: { name: true, email: true },
-      },
-      tags: {
-        include: {
-          tag: true,
+  // Get published pitches - handle database errors gracefully
+  let pitches: Array<{
+    title: string
+    ticker: string
+    summary: string
+    slug: string
+    publishedAt: Date | null
+    author: { name: string | null; email: string }
+    tags: Array<{ tag: { name: string } }>
+  }> = []
+
+  try {
+    pitches = await prisma.pitch.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { publishedAt: 'desc' },
+      take: 20,
+      include: {
+        author: {
+          select: { name: true, email: true },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
         },
       },
-    },
-  })
+    })
+  } catch (error) {
+    // Database not available (SQLite limitation on Vercel)
+    console.warn('Could not fetch pitches for RSS:', error)
+    // Return empty RSS feed instead of failing
+  }
 
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
