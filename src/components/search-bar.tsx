@@ -9,7 +9,10 @@ interface SearchBarProps {
   placeholder?: string
 }
 
-export function SearchBar({ onSearch, placeholder = 'Search pitches by title or ticker...' }: SearchBarProps) {
+export function SearchBar({
+  onSearch,
+  placeholder = 'Search pitches by title or ticker...',
+}: SearchBarProps) {
   const [query, setQuery] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,4 +34,3 @@ export function SearchBar({ onSearch, placeholder = 'Search pitches by title or 
     </div>
   )
 }
-

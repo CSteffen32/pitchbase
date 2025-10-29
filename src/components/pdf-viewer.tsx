@@ -32,7 +32,7 @@ export function PDFViewer({ url, className }: PDFViewerProps) {
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
           </div>
         </div>
-        
+
         <div className="relative bg-white" style={{ overflow: 'hidden' }}>
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80">
@@ -51,16 +51,29 @@ export function PDFViewer({ url, className }: PDFViewerProps) {
           />
         </div>
       </div>
-      
+
       <div className="flex justify-center gap-2 mt-4">
-        <Button asChild variant="outline" className="bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-500">
+        <Button
+          asChild
+          variant="outline"
+          className="bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-500"
+        >
           <a href={absoluteUrl} download className="text-black">
             <Download className="h-4 w-4 mr-2" />
             Download PDF
           </a>
         </Button>
-        <Button asChild variant="outline" className="bg-white hover:bg-gray-100 text-black border-white">
-          <a href={absoluteUrl} target="_blank" rel="noopener noreferrer" className="text-black">
+        <Button
+          asChild
+          variant="outline"
+          className="bg-white hover:bg-gray-100 text-black border-white"
+        >
+          <a
+            href={absoluteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-black"
+          >
             <ExternalLink className="h-4 w-4 mr-2" />
             Open in new tab
           </a>

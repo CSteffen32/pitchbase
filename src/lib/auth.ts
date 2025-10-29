@@ -7,7 +7,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'author-password',
       credentials: {
-        password: { label: 'Author Password', type: 'password' }
+        password: { label: 'Author Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.password) {
@@ -16,11 +16,11 @@ export const authOptions: NextAuthOptions = {
 
         // Simple password check for author access
         const authorPassword = process.env.AUTHOR_PASSWORD || 'pitchbase2024'
-        
+
         if (credentials.password === authorPassword) {
           // Find or create the author user in the database
           let user = await prisma.user.findUnique({
-            where: { email: 'author@pitchbase.com' }
+            where: { email: 'author@pitchbase.com' },
           })
 
           if (!user) {
@@ -29,13 +29,13 @@ export const authOptions: NextAuthOptions = {
                 email: 'author@pitchbase.com',
                 name: 'Author',
                 role: 'AUTHOR',
-              }
+              },
             })
           } else {
             // Update role to ensure AUTHOR
             user = await prisma.user.update({
               where: { id: user.id },
-              data: { role: 'AUTHOR' }
+              data: { role: 'AUTHOR' },
             })
           }
 
@@ -49,8 +49,8 @@ export const authOptions: NextAuthOptions = {
         }
 
         return null
-      }
-    })
+      },
+    }),
   ],
   session: {
     strategy: 'jwt',

@@ -13,6 +13,7 @@ const updatePitchSchema = z.object({
   timeframe: z.string().optional(),
   summary: z.string().min(1).optional(),
   content: z.string().optional(),
+  authorName: z.string().optional(),
   pdfUrl: z.string().optional(),
   coverImage: z.string().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
@@ -122,13 +123,14 @@ export async function PUT(
     }
 
     // Handle status change to PUBLISHED
-    const updateData: any = { ...data, slug }
+    const { tagIds, ...dataWithoutTags } = data
+    const updateData: any = { ...dataWithoutTags, slug }
     if (data.status === 'PUBLISHED' && pitch.status !== 'PUBLISHED') {
       updateData.publishedAt = new Date()
     }
 
     // Handle tag updates
-    if (data.tagIds) {
+    if (tagIds) {
       // First disconnect all existing tags
       await prisma.pitchTag.deleteMany({
         where: { pitchId: params.id },
@@ -139,9 +141,9 @@ export async function PUT(
       where: { id: params.id },
       data: {
         ...updateData,
-        ...(data.tagIds && {
+        ...(tagIds && {
           tags: {
-            create: data.tagIds.map(tagId => ({
+            create: tagIds.map((tagId: string) => ({
               tag: {
                 connect: { id: tagId },
               },
@@ -223,5 +225,3 @@ export async function DELETE(
     )
   }
 }
-
-

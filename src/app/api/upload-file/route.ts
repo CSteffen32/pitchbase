@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    
+
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
     // Return the public URL
     const fileUrl = `/uploads/${filename}`
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       url: fileUrl,
-      filename: filename 
+      filename: filename,
     })
   } catch (error) {
     console.error('File upload error:', error)
@@ -43,5 +43,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-

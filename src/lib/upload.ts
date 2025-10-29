@@ -9,21 +9,23 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 function shouldUseCustomEndpoint(endpoint?: string): boolean {
   if (!endpoint) return false
   // Use custom endpoint for non-AWS services (MinIO, R2, etc.)
-  return endpoint.includes('localhost') || 
-         endpoint.includes('127.0.0.1') || 
-         endpoint.includes('.cloudflarestorage.com') ||
-         endpoint.includes('.r2.cloudflarestorage.com')
+  return (
+    endpoint.includes('localhost') ||
+    endpoint.includes('127.0.0.1') ||
+    endpoint.includes('.cloudflarestorage.com') ||
+    endpoint.includes('.r2.cloudflarestorage.com')
+  )
 }
 
 function getS3Endpoint(endpoint?: string, bucket?: string): string | undefined {
   if (!endpoint) return undefined
-  
+
   // For standard AWS S3 URLs (bucket.s3.region.amazonaws.com), don't use endpoint
   // Let the SDK auto-construct it based on region
   if (endpoint.includes('.s3.') && endpoint.includes('.amazonaws.com')) {
     return undefined
   }
-  
+
   // For MinIO and other S3-compatible services, use the endpoint as-is
   return endpoint
 }
@@ -72,7 +74,7 @@ export async function getSignedUploadUrl(config: UploadConfig) {
     const signedUrl = await getSignedUrl(s3Client, command, {
       expiresIn: config.expiresIn || 3600,
     })
-    
+
     return signedUrl
   } catch (error) {
     console.error('Error generating signed URL:', error)

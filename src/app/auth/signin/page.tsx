@@ -23,14 +23,14 @@ export default function SignInPage() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
-    
+
     try {
       const result = await signIn('credentials', {
         password,
         callbackUrl: '/dashboard/pitches/new',
         redirect: false,
       })
-      
+
       if (result?.error) {
         setError('Incorrect password. Please try again.')
         setPassword('')
@@ -71,7 +71,7 @@ export default function SignInPage() {
                   {error}
                 </div>
               )}
-              
+
               <div>
                 <label className="text-sm font-medium mb-2 block">
                   Author Password
@@ -82,18 +82,14 @@ export default function SignInPage() {
                     type="password"
                     placeholder="Enter author password..."
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     className="pl-10"
                     required
                   />
                 </div>
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign in as Author'}
               </Button>
             </form>

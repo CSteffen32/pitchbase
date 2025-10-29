@@ -10,5 +10,3 @@ export default function DashboardRootLayout({
   // since it has its own black and gold design
   return <>{children}</>
 }
-
-

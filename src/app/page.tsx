@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 // Force rebuild
 import { useSession } from 'next-auth/react'
 import { PitchWithTags } from '@/types'
@@ -15,9 +15,38 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
+  const fetchPitches = useCallback(
+    async (query: string = '') => {
+      try {
+        // If user is authenticated, fetch their pitches from dashboard API
+        // Otherwise fetch public published pitches
+        const url = session?.user
+          ? `/api/dashboard/pitches`
+          : query
+            ? `/api/pitches?search=${encodeURIComponent(query)}&limit=100`
+            : '/api/pitches?limit=100'
+
+        const res = await fetch(url)
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch pitches')
+        }
+
+        const data = await res.json()
+        setPitches(data.pitches)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching pitches:', error)
+        setPitches([])
+        setLoading(false)
+      }
+    },
+    [session]
+  )
+
   useEffect(() => {
     fetchPitches()
-  }, [session])
+  }, [fetchPitches])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -25,46 +54,24 @@ export default function HomePage() {
     }, 300) // Debounce search by 300ms
 
     return () => clearTimeout(timer)
-  }, [searchQuery])
-
-  async function fetchPitches(query: string = '') {
-    try {
-      // If user is authenticated, fetch their pitches from dashboard API
-      // Otherwise fetch public published pitches
-      const url = session?.user 
-        ? `/api/dashboard/pitches`
-        : query 
-          ? `/api/pitches?search=${encodeURIComponent(query)}&limit=100`
-          : '/api/pitches?limit=100'
-      
-      const res = await fetch(url)
-      
-      if (!res.ok) {
-        throw new Error('Failed to fetch pitches')
-      }
-
-      const data = await res.json()
-      setPitches(data.pitches)
-      setLoading(false)
-    } catch (error) {
-      console.error('Error fetching pitches:', error)
-      setPitches([])
-      setLoading(false)
-    }
-  }
+  }, [searchQuery, fetchPitches])
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
   }
 
   // Client-side filtering for authenticated users
-  const filteredPitches = session?.user && !searchQuery
-    ? pitches
-    : pitches.filter(
-        pitch =>
-          pitch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          pitch.ticker.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const filteredPitches =
+    session?.user && !searchQuery
+      ? pitches
+      : pitches.filter(
+          pitch =>
+            pitch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            pitch.ticker.toLowerCase().includes(searchQuery.toLowerCase())
+        )
 
   if (loading) {
     return (
@@ -103,15 +110,18 @@ export default function HomePage() {
         {/* Title Section */}
         <div className="text-center mb-12">
           <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            {searchQuery ? 'Search Results' : session?.user ? 'Your Pitches' : 'Latest Pitches'}
+            {searchQuery
+              ? 'Search Results'
+              : session?.user
+                ? 'Your Pitches'
+                : 'Latest Pitches'}
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
-            {searchQuery 
+            {searchQuery
               ? `Found ${filteredPitches.length} pitch${filteredPitches.length !== 1 ? 'es' : ''} matching "${searchQuery}"`
-              : session?.user 
+              : session?.user
                 ? 'Manage and view all your investment pitches'
-                : 'Discover our most recent stock investment analysis'
-            }
+                : 'Discover our most recent stock investment analysis'}
           </p>
 
           {/* Search */}
@@ -138,17 +148,25 @@ export default function HomePage() {
               <p className="text-gray-400">
                 {searchQuery
                   ? 'Try adjusting your search terms'
-                  : 'Be the first to create a pitch and share your investment analysis'
-                }
+                  : 'Be the first to create a pitch and share your investment analysis'}
               </p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPitches.map(pitch => (
-              <div key={pitch.id} className="bg-gradient-to-b from-gray-800 to-black rounded-xl border border-yellow-500/20 overflow-hidden hover:border-yellow-500/40 transition-all hover:shadow-xl hover:shadow-yellow-500/10 group">
+              <div
+                key={pitch.id}
+                className="bg-gradient-to-b from-gray-800 to-black rounded-xl border border-yellow-500/20 overflow-hidden hover:border-yellow-500/40 transition-all hover:shadow-xl hover:shadow-yellow-500/10 group"
+              >
                 {/* Clickable Image/Title Area */}
-                <Link href={session?.user ? `/dashboard/pitches/${pitch.id}` : `/p/${pitch.slug}`}>
+                <Link
+                  href={
+                    session?.user
+                      ? `/dashboard/pitches/${pitch.id}`
+                      : `/p/${pitch.slug}`
+                  }
+                >
                   {/* Image Placeholder */}
                   <div className="h-64 bg-gradient-to-br from-yellow-600/20 to-yellow-900/20 relative">
                     {/* Ticker Badge */}
@@ -157,20 +175,31 @@ export default function HomePage() {
                         {pitch.ticker}
                       </Badge>
                     </div>
-                    
+
                     {/* Status Badge */}
                     {pitch.status && (
                       <div className="absolute top-4 right-4">
-                        <Badge className={pitch.status === 'PUBLISHED' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-orange-500/20 text-orange-400 border-orange-500/30'}>
+                        <Badge
+                          className={
+                            pitch.status === 'PUBLISHED'
+                              ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                              : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                          }
+                        >
                           {pitch.status}
                         </Badge>
                       </div>
                     )}
-                    
+
                     {/* Date */}
                     <div className="absolute bottom-4 right-4">
                       <span className="text-white text-sm font-medium">
-                        {pitch.publishedAt ? new Date(pitch.publishedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Draft'}
+                        {pitch.publishedAt
+                          ? new Date(pitch.publishedAt).toLocaleDateString(
+                              'en-US',
+                              { month: 'long', year: 'numeric' }
+                            )
+                          : 'Draft'}
                       </span>
                     </div>
                   </div>
@@ -183,7 +212,7 @@ export default function HomePage() {
                     <p className="text-gray-400 mb-6 line-clamp-3 text-sm leading-relaxed">
                       {pitch.summary}
                     </p>
-                    
+
                     {/* Bottom Info Bar */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                       <div className="flex items-center gap-2">
@@ -199,7 +228,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </Link>
-                
+
                 {/* Action Buttons for Authenticated Users */}
                 {session?.user && (
                   <div className="px-6 pb-6 border-t border-gray-700">

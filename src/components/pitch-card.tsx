@@ -19,11 +19,11 @@ interface PitchCardProps {
 export function PitchCard({ pitch }: PitchCardProps) {
   const formatDate = (date: Date | string | null) => {
     if (!date) return 'No date'
-    
+
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
       if (isNaN(dateObj.getTime())) return 'Invalid date'
-      
+
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',

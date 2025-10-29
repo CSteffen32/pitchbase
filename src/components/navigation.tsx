@@ -68,7 +68,7 @@ export function Navigation() {
                   >
                     Pitches
                   </Link>
-                  
+
                   {session ? (
                     <>
                       <Link

@@ -59,5 +59,3 @@ export interface ServerEnv {
   S3_BUCKET: string
   VERCEL_ANALYTICS_ID?: string
 }
-
-

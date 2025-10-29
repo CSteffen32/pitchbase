@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -13,15 +13,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tag } from '@/types'
+import { PitchWithTags } from '@/types'
 import { ArrowLeft, Upload, X, FileText } from 'lucide-react'
 import Link from 'next/link'
 
-export default function NewPitchPage() {
+export default function EditPitchPage() {
+  const params = useParams()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState('')
+  const [pitch, setPitch] = useState<PitchWithTags | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     ticker: '',
@@ -36,10 +40,47 @@ export default function NewPitchPage() {
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [existingPdfUrl, setExistingPdfUrl] = useState('')
 
   useEffect(() => {
-    fetchTags()
-  }, [])
+    if (params.id) {
+      fetchPitch(params.id as string)
+      fetchTags()
+    }
+  }, [params.id])
+
+  const fetchPitch = async (id: string) => {
+    try {
+      const res = await fetch(`/api/dashboard/pitches/${id}`)
+      if (res.ok) {
+        const pitchData = await res.json()
+        setPitch(pitchData)
+
+        // Pre-populate form with existing pitch data
+        setFormData({
+          title: pitchData.title || '',
+          ticker: pitchData.ticker || '',
+          sector: pitchData.sector || '',
+          rating: pitchData.rating?.toString() || '',
+          timeframe: pitchData.timeframe || '',
+          summary: pitchData.summary || '',
+          content: pitchData.content || '',
+          authorName: pitchData.authorName || '',
+          pdfUrl: pitchData.pdfUrl || '',
+        })
+
+        setExistingPdfUrl(pitchData.pdfUrl || '')
+        setSelectedTags(pitchData.tags?.map((pt: any) => pt.tag.id) || [])
+        setInitialLoading(false)
+      } else {
+        console.error('Failed to fetch pitch')
+        setInitialLoading(false)
+      }
+    } catch (error) {
+      console.error('Error fetching pitch:', error)
+      setInitialLoading(false)
+    }
+  }
 
   const fetchTags = async () => {
     try {
@@ -59,7 +100,6 @@ export default function NewPitchPage() {
     setIsUploading(true)
 
     try {
-      // Use S3 upload API
       const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
         headers: {
@@ -81,11 +121,7 @@ export default function NewPitchPage() {
       }
 
       const { uploadUrl, fileUrl } = await uploadResponse.json()
-      console.log('Got upload URL:', uploadUrl)
-      console.log('File URL:', fileUrl)
 
-      // Upload file to S3
-      console.log('Uploading to S3...')
       const s3Response = await fetch(uploadUrl, {
         method: 'PUT',
         body: file,
@@ -94,7 +130,6 @@ export default function NewPitchPage() {
         },
       })
 
-      console.log('S3 response status:', s3Response.status)
       if (!s3Response.ok) {
         const s3ErrorText = await s3Response.text()
         console.error('S3 upload failed:', s3Response.status, s3ErrorText)
@@ -105,13 +140,12 @@ export default function NewPitchPage() {
 
       setFormData(prev => ({ ...prev, pdfUrl: fileUrl }))
       setUploadedFile(file)
+      setExistingPdfUrl('') // Clear existing PDF when new one is uploaded
     } catch (error) {
       console.error('Upload error:', error)
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error occurred'
-      alert(
-        `Failed to upload file: ${errorMessage}\n\nCheck the console for more details.`
-      )
+      alert(`Failed to upload file: ${errorMessage}`)
     } finally {
       setIsUploading(false)
     }
@@ -127,6 +161,7 @@ export default function NewPitchPage() {
   const removeFile = () => {
     setUploadedFile(null)
     setFormData(prev => ({ ...prev, pdfUrl: '' }))
+    setExistingPdfUrl('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,8 +169,8 @@ export default function NewPitchPage() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/dashboard/pitches', {
-        method: 'POST',
+      const res = await fetch(`/api/dashboard/pitches/${params.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -143,19 +178,20 @@ export default function NewPitchPage() {
           ...formData,
           rating: formData.rating ? parseInt(formData.rating) : undefined,
           tagIds: selectedTags,
+          pdfUrl: formData.pdfUrl || existingPdfUrl, // Keep existing PDF if no new one
         }),
       })
 
       if (res.ok) {
-        const pitch = await res.json()
-        router.push(`/dashboard/pitches/${pitch.id}`)
+        const updatedPitch = await res.json()
+        router.push(`/dashboard/pitches/${updatedPitch.id}`)
       } else {
         const error = await res.json()
-        alert(error.error || 'Failed to create pitch')
+        alert(error.error || 'Failed to update pitch')
       }
     } catch (error) {
-      console.error('Error creating pitch:', error)
-      alert('Failed to create pitch')
+      console.error('Error updating pitch:', error)
+      alert('Failed to update pitch')
     } finally {
       setLoading(false)
     }
@@ -192,16 +228,27 @@ export default function NewPitchPage() {
     }
   }
 
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p>Loading pitch...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/">
+        <Link href={`/dashboard/pitches/${params.id}`}>
           <Button variant="outline" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold">New Pitch</h1>
+        <h1 className="text-3xl font-bold">Edit Pitch</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -209,7 +256,7 @@ export default function NewPitchPage() {
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
             <CardDescription>
-              Provide the essential details for your stock pitch
+              Update the essential details for your stock pitch
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -319,7 +366,7 @@ export default function NewPitchPage() {
           <CardHeader>
             <CardTitle>Content</CardTitle>
             <CardDescription>
-              Add detailed analysis and supporting content
+              Update detailed analysis and supporting content
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -360,6 +407,32 @@ export default function NewPitchPage() {
                     </Button>
                   </div>
                 </div>
+              ) : existingPdfUrl ? (
+                <div className="border rounded-lg p-4 bg-muted/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        Existing PDF attached
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link href={existingPdfUrl} target="_blank">
+                        <Button type="button" variant="outline" size="sm">
+                          View
+                        </Button>
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeFile}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
@@ -395,7 +468,7 @@ export default function NewPitchPage() {
           <CardHeader>
             <CardTitle>Tags</CardTitle>
             <CardDescription>
-              Add tags to help categorize your pitch
+              Update tags to help categorize your pitch
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -431,13 +504,13 @@ export default function NewPitchPage() {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Link href="/dashboard">
+          <Link href={`/dashboard/pitches/${params.id}`}>
             <Button type="button" variant="outline">
               Cancel
             </Button>
           </Link>
           <Button type="submit" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Pitch'}
+            {loading ? 'Updating...' : 'Update Pitch'}
           </Button>
         </div>
       </form>

@@ -46,4 +46,8 @@ next-env.d.ts
 # OS
 Thumbs.db
 
+# Deployment
+deploy.zip
+*.zip
+
 

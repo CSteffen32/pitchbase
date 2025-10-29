@@ -59,7 +59,9 @@ export async function generateMetadata({
       title: pitch.title,
       description: pitch.summary,
       type: 'article',
-      publishedTime: pitch.publishedAt ? new Date(pitch.publishedAt).toISOString() : undefined,
+      publishedTime: pitch.publishedAt
+        ? new Date(pitch.publishedAt).toISOString()
+        : undefined,
       authors: [pitch.authorName || pitch.author.name || pitch.author.email],
       tags: pitch.tags.map(({ tag }) => tag.name),
     },
@@ -82,11 +84,11 @@ export default async function PitchPage({ params }: PitchPageProps) {
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return 'No date'
-    
+
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
       if (isNaN(dateObj.getTime())) return 'Invalid date'
-      
+
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
@@ -138,7 +140,10 @@ export default async function PitchPage({ params }: PitchPageProps) {
                         {pitch.ticker}
                       </Badge>
                       {pitch.sector && (
-                        <Badge variant="outline" className="text-yellow-400 text-lg px-5 py-1.5">
+                        <Badge
+                          variant="outline"
+                          className="text-yellow-400 text-lg px-5 py-1.5"
+                        >
                           {pitch.sector}
                         </Badge>
                       )}
@@ -165,7 +170,12 @@ export default async function PitchPage({ params }: PitchPageProps) {
                     </div>
                   )}
                   <div className="flex items-center gap-1">
-                    <span>By {pitch.authorName || pitch.author.name || pitch.author.email}</span>
+                    <span>
+                      By{' '}
+                      {pitch.authorName ||
+                        pitch.author.name ||
+                        pitch.author.email}
+                    </span>
                   </div>
                 </div>
 
@@ -182,14 +192,18 @@ export default async function PitchPage({ params }: PitchPageProps) {
 
               <CardContent>
                 <div className="prose max-w-none text-white">
-                  <h3 className="text-xl font-semibold mb-4 text-yellow-400">Summary</h3>
+                  <h3 className="text-xl font-semibold mb-4 text-yellow-400">
+                    Summary
+                  </h3>
                   <p className="text-lg leading-relaxed mb-8 text-gray-300">
                     {pitch.summary}
                   </p>
 
                   {pitch.content && (
                     <>
-                      <h3 className="text-xl font-semibold mb-4 text-yellow-400">Analysis</h3>
+                      <h3 className="text-xl font-semibold mb-4 text-yellow-400">
+                        Analysis
+                      </h3>
                       <div
                         className="prose max-w-none"
                         dangerouslySetInnerHTML={{ __html: pitch.content }}
@@ -213,7 +227,9 @@ export default async function PitchPage({ params }: PitchPageProps) {
               <Card className="bg-gradient-to-b from-gray-800 to-black border-yellow-500/20">
                 <CardHeader>
                   <CardTitle className="text-white">More Pitches</CardTitle>
-                  <CardDescription className="text-gray-400">Related investment analysis</CardDescription>
+                  <CardDescription className="text-gray-400">
+                    Related investment analysis
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {relatedPitches.map(relatedPitch => (

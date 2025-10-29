@@ -19,7 +19,7 @@ export async function GET(
 ) {
   try {
     const key = decodeURIComponent(params.key)
-    
+
     // Get the file from S3
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
@@ -27,10 +27,10 @@ export async function GET(
     })
 
     const response = await s3Client.send(command)
-    
+
     // Get the content type from the S3 response or default to application/pdf
     const contentType = response.ContentType || 'application/pdf'
-    
+
     // Convert the stream to an array buffer
     const arrayBuffer = await response.Body!.transformToByteArray()
     const buffer = Buffer.from(arrayBuffer)
@@ -45,10 +45,6 @@ export async function GET(
     })
   } catch (error) {
     console.error('Error fetching file from S3:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch file' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch file' }, { status: 500 })
   }
 }
-

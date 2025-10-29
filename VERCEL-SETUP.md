@@ -1,13 +1,19 @@
 # Vercel Setup - Quick Guide
 
-## Step 1: Go to Your Vercel Dashboard
+## Step 1: First Deployment (To Get Your URL)
+
 1. Visit [vercel.com](https://vercel.com)
-2. Go to your project (should be imported from GitHub)
-3. Click on **Settings** → **Environment Variables**
+2. If you've already imported from GitHub, skip to **Step 2** below
+3. If not, click **"Add New Project"** → Import your GitHub repo
+4. Click **"Deploy"** (this will fail, but you'll get your project URL)
+5. After deployment starts, note your project URL: `https://your-project-name.vercel.app`
 
-## Step 2: Add These Environment Variables
+## Step 2: Add Environment Variables (Before or After First Deploy)
 
-Click "Add New" for each:
+You can add environment variables at any time:
+1. Go to your project in Vercel Dashboard
+2. Click **Settings** → **Environment Variables**
+3. Click **"Add New"** for each variable below
 
 ### Required Variables:
 
@@ -16,8 +22,10 @@ Click "Add New" for each:
    - Environments: Production, Preview, Development
 
 2. **NEXTAUTH_URL**
-   - Value: `https://your-project-name.vercel.app` (replace with your actual Vercel URL)
+   - **First deployment:** Use placeholder: `https://your-project-name.vercel.app` 
+   - **After first deploy:** Replace with your actual Vercel URL (you'll see it in the dashboard)
    - Environments: Production, Preview, Development
+   - 💡 **Tip:** Vercel shows your URL format when you import - use that pattern
 
 3. **NEXTAUTH_SECRET**
    - Value: Generate one with: `openssl rand -base64 32`

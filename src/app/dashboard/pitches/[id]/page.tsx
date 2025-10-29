@@ -13,7 +13,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PDFViewer } from '@/components/pdf-viewer'
 import { PitchWithTags } from '@/types'
-import { ArrowLeft, Edit, Eye, Trash2, Calendar, TrendingUp } from 'lucide-react'
+import {
+  ArrowLeft,
+  Edit,
+  Eye,
+  Trash2,
+  Calendar,
+  TrendingUp,
+} from 'lucide-react'
 import Link from 'next/link'
 
 export default function PitchDetailPage() {
@@ -45,7 +52,8 @@ export default function PitchDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!pitch || !confirm('Are you sure you want to delete this pitch?')) return
+    if (!pitch || !confirm('Are you sure you want to delete this pitch?'))
+      return
 
     try {
       const res = await fetch(`/api/dashboard/pitches/${pitch.id}`, {
@@ -62,11 +70,11 @@ export default function PitchDetailPage() {
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return 'No date'
-    
+
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
       if (isNaN(dateObj.getTime())) return 'Invalid date'
-      
+
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
@@ -94,7 +102,8 @@ export default function PitchDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Pitch Not Found</h1>
           <p className="text-muted-foreground mb-4">
-            The pitch you're looking for doesn't exist or has been deleted.
+            The pitch you&apos;re looking for doesn&apos;t exist or has been
+            deleted.
           </p>
           <Link href="/">
             <Button>
@@ -146,7 +155,10 @@ export default function PitchDetailPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <Badge variant="secondary" className="font-mono text-lg px-3 py-1">
+                    <Badge
+                      variant="secondary"
+                      className="font-mono text-lg px-3 py-1"
+                    >
                       {pitch.ticker}
                     </Badge>
                     {pitch.sector && (
@@ -154,7 +166,11 @@ export default function PitchDetailPage() {
                         {pitch.sector}
                       </Badge>
                     )}
-                    <Badge variant={pitch.status === 'PUBLISHED' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={
+                        pitch.status === 'PUBLISHED' ? 'default' : 'secondary'
+                      }
+                    >
                       {pitch.status}
                     </Badge>
                   </div>
@@ -165,7 +181,9 @@ export default function PitchDetailPage() {
                       <div
                         key={i}
                         className={`h-5 w-5 ${
-                          i < pitch.rating! ? 'text-yellow-400' : 'text-gray-300'
+                          i < pitch.rating!
+                            ? 'text-yellow-400'
+                            : 'text-gray-300'
                         }`}
                       >
                         ★
@@ -207,9 +225,7 @@ export default function PitchDetailPage() {
             <CardContent>
               <div className="prose max-w-none">
                 <h3 className="text-xl font-semibold mb-4">Summary</h3>
-                <p className="text-lg leading-relaxed mb-8">
-                  {pitch.summary}
-                </p>
+                <p className="text-lg leading-relaxed mb-8">{pitch.summary}</p>
 
                 {pitch.content && (
                   <>
@@ -234,5 +250,3 @@ export default function PitchDetailPage() {
     </div>
   )
 }
-
-

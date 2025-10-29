@@ -13,7 +13,12 @@ const uploadSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    console.log('Upload request - Session:', session?.user?.email, 'Role:', session?.user?.role)
+    console.log(
+      'Upload request - Session:',
+      session?.user?.email,
+      'Role:',
+      session?.user?.role
+    )
 
     if (
       !session?.user ||
@@ -49,7 +54,7 @@ export async function POST(request: NextRequest) {
       contentType,
       expiresIn: 3600, // 1 hour
     })
-    
+
     const fileUrl = getFileUrl(key)
     console.log('Generated upload URL:', uploadUrl.substring(0, 100) + '...')
     console.log('File URL:', fileUrl)
@@ -76,4 +81,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
